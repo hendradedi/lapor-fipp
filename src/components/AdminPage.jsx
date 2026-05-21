@@ -142,7 +142,7 @@ function AdminPage({
               <option value="">Pilih laporan</option>
               {reports.map((report) => (
                 <option key={report.id} value={report.id}>
-                  #{report.id.slice(0, 8)} - {report.category} ({report.status})
+                  #{String(report.id).slice(0, 8)} - {report.category} ({report.status})
                 </option>
               ))}
             </select>

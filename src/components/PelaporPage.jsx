@@ -165,7 +165,7 @@ function PelaporPage({ reportForm, setReportForm, submitReport, loading, reports
           {reports.slice(0, 10).map((report) => (
             <div className="list-item" key={report.id}>
               <div>
-                <strong>#{report.id.slice(0, 8)}</strong>
+                <strong>#{String(report.id).slice(0, 8)}</strong>
                 <p>
                   {report.category} - {report.subCategory}
                 </p>
