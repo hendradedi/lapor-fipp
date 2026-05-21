@@ -494,4 +494,8 @@ export const reportService = {
 
     return metrics;
   },
+
+  getDb() {
+    return pool;
+  },
 };

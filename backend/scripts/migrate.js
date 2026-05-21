@@ -88,6 +88,24 @@ const migrations = [
     `
   },
   {
+    name: 'create_report_attachments_table',
+    sql: `
+      CREATE TABLE IF NOT EXISTS report_attachments (
+        id SERIAL PRIMARY KEY,
+        report_id INTEGER NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+        file_name VARCHAR(255) NOT NULL,
+        file_path VARCHAR(500) NOT NULL,
+        file_size INTEGER,
+        mime_type VARCHAR(100),
+        uploaded_by VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_attachments_report_id ON report_attachments(report_id);
+      CREATE INDEX IF NOT EXISTS idx_attachments_created_at ON report_attachments(created_at DESC);
+    `
+  },
+  {
     name: 'create_settings_table',
     sql: `
       CREATE TABLE IF NOT EXISTS app_settings (

@@ -95,6 +95,41 @@ export const reportService = {
       headers: { Authorization: `Bearer ${token}` },
     });
   },
+
+  async uploadAttachment(reportId, file, token) {
+    const formData = new FormData();
+    formData.append('attachment', file);
+
+    const url = `${API_BASE_URL}/reports/${reportId}/upload`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  async getAttachments(reportId, token) {
+    return request(`/reports/${reportId}/attachments`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async deleteAttachment(reportId, attachmentId, token) {
+    return request(`/reports/${reportId}/attachments/${attachmentId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
 };
 
 // Admin API

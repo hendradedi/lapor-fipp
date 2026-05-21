@@ -313,6 +313,20 @@ function App() {
         reporterAuth.token
       )
 
+      // Upload files if any
+      const reportId = result.report.id
+      const selectedFilesFromForm = event.target.querySelector('input[type="file"]')?.files
+      if (selectedFilesFromForm && selectedFilesFromForm.length > 0) {
+        for (const file of selectedFilesFromForm) {
+          try {
+            await reportService.uploadAttachment(reportId, file, reporterAuth.token)
+          } catch (uploadError) {
+            console.error('File upload error:', uploadError)
+            setMessage(`Laporan berhasil dikirim, namun ada file yang gagal diunggah: ${uploadError.message}`)
+          }
+        }
+      }
+
       await refreshAll()
       setStatusForm((prev) => ({ ...prev, reportId: result.report.id }))
       setMessage(`Laporan berhasil dikirim. ID: ${result.report.id}`)
@@ -322,6 +336,9 @@ function App() {
         locationName: '',
         description: '',
       }))
+      // Reset file input
+      const fileInput = event.target.querySelector('input[type="file"]')
+      if (fileInput) fileInput.value = ''
     } catch (error) {
       setMessage(error.message || 'Gagal mengirim laporan')
     } finally {
@@ -728,10 +745,15 @@ function App() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <div>
-          <h1>Lapor FIPP</h1>
-          <p>Sistem laporan terpadu FIPP UNNES - Node.js + PostgreSQL</p>
-          <p className="role-pill">Role aktif: {activeRoleLabel}</p>
+        <div className="header-content">
+          <img src="/logo-unnes.png" alt="Logo UNNES" className="logo-unnes" />
+          <div>
+            <h1>Lapor FIPP</h1>
+            <p>Sistem laporan terpadu FIPP UNNES - Node.js + PostgreSQL</p>
+            <p className="role-pill">Role aktif: {activeRoleLabel}</p>
+          </div>
+        </div>
+        <div className="header-info">
           <p>
             Login pelapor: {reporterAuth.email || 'Belum login'} ({reporterAuth.provider || '-'})
           </p>
@@ -745,20 +767,24 @@ function App() {
           >
             Pelapor
           </button>
-          <button
-            type="button"
-            onClick={() => setActivePage('admin')}
-            className={activePage === 'admin' ? 'active' : ''}
-          >
-            Admin
-          </button>
-          <button
-            type="button"
-            onClick={() => setActivePage('dashboard')}
-            className={activePage === 'dashboard' ? 'active' : ''}
-          >
-            Dashboard
-          </button>
+          {adminSession ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setActivePage('admin')}
+                className={activePage === 'admin' ? 'active' : ''}
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => setActivePage('dashboard')}
+                className={activePage === 'dashboard' ? 'active' : ''}
+              >
+                Dashboard
+              </button>
+            </>
+          ) : null}
           {reporterAuth.verified ? (
             <button type="button" className="secondary" onClick={logoutReporter}>
               Logout Pelapor
@@ -788,6 +814,7 @@ function App() {
             loading={loading}
             reports={reports}
             toWhatsAppLink={toWhatsAppLink}
+            token={reporterAuth.token}
           />
         ) : null}
 

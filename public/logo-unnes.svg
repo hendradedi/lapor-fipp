@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- UNNES Logo - Universitas Negeri Semarang -->
+  <defs>
+    <linearGradient id="unnesGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#005f73;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a9396;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Circle background -->
+  <circle cx="100" cy="100" r="95" fill="url(#unnesGrad)" stroke="#003d4d" stroke-width="4"/>
+  
+  <!-- Shield shape -->
+  <path d="M100 25 L160 55 L160 110 C160 145 130 175 100 185 C70 175 40 145 40 110 L40 55 Z" 
+        fill="#ffffff" stroke="#003d4d" stroke-width="2"/>
+  
+  <!-- Text UNNES -->
+  <text x="100" y="90" font-family="Arial, sans-serif" font-size="28" font-weight="bold" 
+        fill="#005f73" text-anchor="middle">UNNES</text>
+  
+  <!-- Decorative line -->
+  <line x1="60" y1="105" x2="140" y2="105" stroke="#0a9396" stroke-width="3"/>
+  
+  <!-- Subtitle -->
+  <text x="100" y="130" font-family="Arial, sans-serif" font-size="10" 
+        fill="#005f73" text-anchor="middle">UNIVERSITAS NEGERI</text>
+  <text x="100" y="145" font-family="Arial, sans-serif" font-size="10" 
+        fill="#005f73" text-anchor="middle">SEMARANG</text>
+  
+  <!-- Year -->
+  <text x="100" y="165" font-family="Arial, sans-serif" font-size="9" 
+        fill="#0a9396" text-anchor="middle">1965</text>
+</svg>

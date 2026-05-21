@@ -1,4 +1,17 @@
-function PelaporPage({ reportForm, setReportForm, submitReport, loading, reports, toWhatsAppLink }) {
+import { useState } from 'react';
+
+function PelaporPage({ reportForm, setReportForm, submitReport, loading, reports, toWhatsAppLink, token }) {
+  const [selectedFiles, setSelectedFiles] = useState([]);
+
+  const handleFileChange = (event) => {
+    const files = Array.from(event.target.files);
+    setSelectedFiles(files);
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <section className="page-grid">
       <article className="card">
@@ -103,6 +116,30 @@ function PelaporPage({ reportForm, setReportForm, submitReport, loading, reports
               placeholder="Jelaskan kronologi, dampak, dan harapan penyelesaian"
             />
           </label>
+
+          <label>
+            Upload Foto (Opsional)
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileChange}
+            />
+            <small className="muted">Format: JPG, PNG, GIF, BMP, WebP (Maks 5MB per file)</small>
+          </label>
+
+          {selectedFiles.length > 0 && (
+            <div className="file-list">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="file-item">
+                  <span>{file.name}</span>
+                  <button type="button" onClick={() => removeFile(index)} className="btn-remove">
+                    Hapus
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           <label className="check">
             <input

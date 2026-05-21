@@ -4,13 +4,20 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-import { 
-  authService, 
-  adminService, 
-  settingsService, 
-  reportService 
+import {
+  authService,
+  adminService,
+  settingsService,
+  reportService
 } from './src/services.js';
+
+import { upload, getFileUrl, deleteFile, getFileInfo } from './src/fileUpload.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -473,6 +480,134 @@ app.get('/api/dashboard/trend', authenticateToken, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// ========== FILE UPLOAD ROUTES ==========
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Upload attachment for a report
+app.post('/api/reports/:id/upload',
+  authenticateToken,
+  upload.single('attachment'),
+  async (req, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      const userId = req.user.id;
+      const email = req.user.email;
+
+      // Verify report exists and belongs to user (unless admin)
+      const report = await reportService.getReportById(reportId);
+      if (!report) {
+        return res.status(404).json({ error: 'Laporan tidak ditemukan' });
+      }
+
+      if (report.user_id !== userId && !await adminService.isAdmin(email)) {
+        return res.status(403).json({ error: 'Tidak memiliki akses untuk upload file ke laporan ini' });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: 'File tidak diunggah' });
+      }
+
+      // Save attachment record to database
+      const db = reportService.getDb();
+      const result = await db.query(
+        `INSERT INTO report_attachments (report_id, file_name, file_path, file_size, mime_type, uploaded_by)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [reportId, req.file.filename, req.file.path, req.file.size, req.file.mimetype, email]
+      );
+
+      res.status(201).json({
+        message: 'File berhasil diunggah',
+        attachment: result.rows[0],
+        url: getFileUrl(req.file.filename)
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+// Get attachments for a report
+app.get('/api/reports/:id/attachments',
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      const email = req.user.email;
+
+      // Verify report exists and user has access
+      const report = await reportService.getReportById(reportId);
+      if (!report) {
+        return res.status(404).json({ error: 'Laporan tidak ditemukan' });
+      }
+
+      if (report.user_id !== req.user.id && !await adminService.isAdmin(email)) {
+        return res.status(403).json({ error: 'Tidak memiliki akses untuk melihat file laporan ini' });
+      }
+
+      const db = reportService.getDb();
+      const result = await db.query(
+        `SELECT * FROM report_attachments WHERE report_id = $1 ORDER BY created_at ASC`,
+        [reportId]
+      );
+
+      const attachments = result.rows.map(row => ({
+        ...row,
+        url: getFileUrl(row.file_name)
+      }));
+
+      res.json({ attachments });
+    } catch (error) {
+      console.error('Get attachments error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+// Delete attachment
+app.delete('/api/reports/:reportId/attachments/:attachmentId',
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const reportId = parseInt(req.params.reportId);
+      const attachmentId = parseInt(req.params.attachmentId);
+      const email = req.user.email;
+
+      // Verify report exists and user has access
+      const report = await reportService.getReportById(reportId);
+      if (!report) {
+        return res.status(404).json({ error: 'Laporan tidak ditemukan' });
+      }
+
+      if (report.user_id !== req.user.id && !await adminService.isAdmin(email)) {
+        return res.status(403).json({ error: 'Tidak memiliki akses untuk menghapus file laporan ini' });
+      }
+
+      const db = reportService.getDb();
+      const result = await db.query(
+        `DELETE FROM report_attachments WHERE id = $1 AND report_id = $2 RETURNING *`,
+        [attachmentId, reportId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'File attachment tidak ditemukan' });
+      }
+
+      // Delete physical file
+      const attachment = result.rows[0];
+      await deleteFile(attachment.file_path);
+
+      res.json({ message: 'File berhasil dihapus' });
+    } catch (error) {
+      console.error('Delete attachment error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
 
 // ========== ERROR HANDLING ==========
 

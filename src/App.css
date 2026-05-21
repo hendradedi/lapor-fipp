@@ -5,6 +5,27 @@
   padding-bottom: 18px;
 }
 
+.logo-unnes {
+  width: 80px;
+  height: 80px;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
 .login-shell {
   min-height: calc(100vh - 40px);
   display: grid;
@@ -467,6 +488,34 @@ button:disabled:hover {
     align-items: flex-start;
   }
 
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .logo-unnes {
+    width: 60px;
+    height: 60px;
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+
+  .header-info {
+    font-size: 12px;
+  }
+
+  nav {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  nav button {
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+
   .card {
     grid-column: span 12;
   }
@@ -486,4 +535,73 @@ button:disabled:hover {
   .item-actions {
     justify-items: start;
   }
+
+  .file-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .file-item span {
+    max-width: 100%;
+  }
+}
+
+/* File upload styles */
+.file-list {
+  margin: 12px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: var(--bg-secondary);
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 4px 0;
+  background: var(--bg);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-light);
+}
+
+.file-item span {
+  font-size: 14px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
+.btn-remove {
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-remove:hover {
+  background: var(--danger-dark);
+}
+
+input[type="file"] {
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  width: 100%;
+  font-size: 14px;
+}
+
+input[type="file"]:focus {
+  outline: none;
+  border-color: var(--primary);
 }
