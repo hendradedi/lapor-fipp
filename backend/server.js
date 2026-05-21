@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
+import crypto from 'crypto';
+import { execSync } from 'child_process';
 import { body, validationResult } from 'express-validator';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -14,7 +16,7 @@ import {
   reportService
 } from './src/services.js';
 
-import { upload, getFileUrl, deleteFile, getFileInfo } from './src/fileUpload.js';
+import upload, { getFileUrl, deleteFile, getFileInfo, uploadSingle, uploadMultiple, serveUploads } from './src/fileUpload.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,9 +26,17 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy — required behind Cloudflare Tunnel
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req, _res, buf) => {
+    req.rawBody = buf.toString();
+  }
+}));
 app.use(express.urlencoded({ extended: true }));
 
 // CORS Configuration
@@ -41,9 +51,10 @@ app.use(cors(corsOptions));
 
 // Rate Limiting
 const limiter = rateLimit({
-  windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000, // 15 minutes
+  windowMs: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000,
   max: process.env.RATE_LIMIT_MAX_REQUESTS || 100,
   message: 'Terlalu banyak permintaan dari IP ini, coba lagi nanti.',
+  skip: (req) => req.path === '/api/deploy-webhook',
 });
 app.use('/api/', limiter);
 
@@ -478,6 +489,50 @@ app.get('/api/dashboard/trend', authenticateToken, async (req, res) => {
     res.json({ trendRows });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ========== GITHUB WEBHOOK (AUTO-DEPLOY) ==========
+
+app.post('/api/deploy-webhook', async (req, res) => {
+  try {
+    const secret = process.env.WEBHOOK_SECRET;
+    if (!secret) {
+      return res.status(500).json({ error: 'Webhook secret tidak dikonfigurasi' });
+    }
+
+    const signature = req.headers['x-hub-signature-256'];
+    if (!signature) {
+      return res.status(401).json({ error: 'Signature header diperlukan' });
+    }
+
+    const payload = req.rawBody || JSON.stringify(req.body);
+    const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');
+
+    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+      return res.status(403).json({ error: 'Signature tidak valid' });
+    }
+
+    const event = req.headers['x-github-event'];
+    if (event !== 'push') {
+      return res.status(200).json({ message: `Event ${event} diabaikan (bukan push)` });
+    }
+
+    res.status(202).json({ message: 'Deploy dimulai...' });
+
+    const deployDir = path.resolve(__dirname, '..');
+    const commands = [
+      `cd ${deployDir}`,
+      'git pull origin main 2>&1',
+      'npm install 2>&1',
+      'npm run build 2>&1',
+      'pm2 restart lapor-fipp 2>&1',
+    ].join(' && ');
+
+    const output = execSync(commands, { timeout: 120000, cwd: deployDir });
+    console.log('[DEPLOY] OK:', output.toString().slice(0, 500));
+  } catch (error) {
+    console.error('[DEPLOY] ERROR:', error.message);
   }
 });
 
