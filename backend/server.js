@@ -666,6 +666,16 @@ app.delete('/api/reports/:reportId/attachments/:attachmentId',
 
 // ========== ERROR HANDLING ==========
 
+// Serve static frontend (Vite build)
+const frontendDist = path.join(__dirname, '..', 'dist');
+app.use(express.static(frontendDist));
+
+// SPA fallback — serve index.html for non-API routes
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
+  res.sendFile(path.join(frontendDist, 'index.html'));
+});
+
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint tidak ditemukan' });
