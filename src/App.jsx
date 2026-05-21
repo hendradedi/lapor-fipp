@@ -851,7 +851,7 @@ function App() {
 
       <footer className="footer-note">
         <p>
-          Backend: Node.js + Express + PostgreSQL. Frontend: React + Vite.
+          Dibuat dengan ❤️ oleh Laboratorium Pendidikan Non Formal
         </p>
       </footer>
     </main>
