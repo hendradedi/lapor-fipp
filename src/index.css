@@ -1,25 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap');
 
 :root {
-  --bg: #f4f7fb;
-  --text: #1d2838;
-  --text-soft: #5f6f85;
+  --bg: #edf5f0;
+  --text: #1b4332;
+  --text-soft: #4a7c6a;
   --surface: rgba(255, 255, 255, 0.92);
   --surface-strong: #ffffff;
-  --line: #dde5ef;
-  --brand: #005f73;
-  --brand-2: #0a9396;
-  --accent: #ee9b00;
+  --line: #c8e0d2;
+  --brand: #1b6b4a;
+  --brand-2: #2d9f6e;
+  --accent: #52b788;
   --danger: #b42318;
-  --ok: #0d9488;
+  --ok: #2d9f6e;
   --radius: 16px;
-  --shadow: 0 14px 30px rgba(24, 55, 89, 0.12);
+  --shadow: 0 14px 30px rgba(27, 67, 50, 0.12);
 
   font-family: 'Manrope', sans-serif;
   line-height: 1.45;
   color: var(--text);
-  background: radial-gradient(circle at top left, #d7eff4 0%, #f4f7fb 36%),
-    linear-gradient(125deg, #f4f7fb 0%, #eef5ff 100%);
+  background: radial-gradient(circle at top left, #d8eddc 0%, #edf5f0 36%),
+    linear-gradient(125deg, #edf5f0 0%, #e2efe7 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

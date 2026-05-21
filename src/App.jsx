@@ -36,6 +36,12 @@ function App() {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageType, setMessageType] = useState('') // 'error' or 'success'
+  
+  const showMessage = (msg, type = 'success') => {
+    setMessage(msg)
+    setMessageType(type)
+  }
   const [adminSession, setAdminSession] = useState(() => readLocal(ADMIN_SESSION_KEY, null))
   const [reporterAuth, setReporterAuth] = useState(() => {
     if (!storedReporterSession) {
@@ -302,6 +308,7 @@ function App() {
 
     setLoading(true)
     setMessage('')
+    setMessageType('')
     try {
       const result = await reportService.createReport(
         {
@@ -358,10 +365,10 @@ function App() {
     try {
       const result = await authApi.loginReporter(reporterAuthForm.email, reporterAuthForm.password)
       startReporterSession(result, 'email')
-      setMessage('Login email berhasil.')
+      showMessage('Login email berhasil.')
     } catch (error) {
       setReporterAuth((prev) => ({ ...prev, loading: false, verified: false }))
-      setMessage(error.message || 'Login email gagal')
+      showMessage(error.message || 'Login email gagal', 'error')
     }
   }
 
@@ -403,10 +410,10 @@ function App() {
         reporterAuthForm.email.split('@')[0]
       )
       startReporterSession(result, 'email')
-      setMessage('Registrasi pelapor berhasil. Anda sudah login.')
+      showMessage('Registrasi pelapor berhasil. Anda sudah login.')
     } catch (error) {
       setReporterAuth((prev) => ({ ...prev, loading: false, verified: false }))
-      setMessage(error.message || 'Registrasi gagal')
+      showMessage(error.message || 'Registrasi gagal', 'error')
     }
   }
 
@@ -416,6 +423,7 @@ function App() {
     }
     setLoading(true)
     setMessage('')
+    setMessageType('')
     try {
       const result = await authApi.loginAdmin(adminForm.email, adminForm.password)
       const session = {
@@ -429,14 +437,14 @@ function App() {
       }
       setAdminSession(session)
       setActivePage('admin')
-      setMessage(`Login berhasil sebagai ${session.role}.`)
+      showMessage(`Login berhasil sebagai ${session.role}.`)
       
       // Refresh admin data after login
       await refreshSlaConfig()
       await refreshAdminPolicy()
       await refreshDashboard()
     } catch (error) {
-      setMessage(error.message || 'Login admin gagal')
+      showMessage(error.message || 'Login admin gagal', 'error')
     } finally {
       setLoading(false)
     }
@@ -533,6 +541,7 @@ function App() {
 
     setLoading(true)
     setMessage('')
+    setMessageType('')
     try {
       await reportService.updateReportStatus(
         statusForm.reportId,
@@ -621,6 +630,7 @@ function App() {
               onClick={() => {
                 setEntryRole('pelapor')
                 setMessage('')
+                setMessageType('')
               }}
             >
               Pelapor
@@ -631,13 +641,14 @@ function App() {
               onClick={() => {
                 setEntryRole('admin')
                 setMessage('')
+                setMessageType('')
               }}
             >
               Admin / Asisten
             </button>
           </div>
 
-          {message ? <section className="banner">{message}</section> : null}
+          {message ? <section className={`banner${messageType === 'error' ? ' error' : ''}`}>{message}</section> : null}
 
           {entryRole === 'pelapor' ? (
             <form
@@ -803,7 +814,7 @@ function App() {
         </nav>
       </header>
 
-      {message ? <section className="banner">{message}</section> : null}
+      {message ? <section className={`banner${messageType === 'error' ? ' error' : ''}`}>{message}</section> : null}
 
       <Suspense fallback={<section className="card full-width">Memuat halaman...</section>}>
         {activePage === 'pelapor' ? (
