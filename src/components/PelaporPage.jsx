@@ -1,7 +1,27 @@
 import { useState } from 'react';
 
+const formatReportId = (id) => {
+  if (id === null || id === undefined) {
+    return '-';
+  }
+
+  if (typeof id === 'string' || typeof id === 'number' || typeof id === 'bigint') {
+    return String(id);
+  }
+
+  // Fallback for object-like IDs (e.g., MongoDB-style { $oid: ... })
+  if (typeof id === 'object' && '$oid' in id && id.$oid) {
+    return String(id.$oid);
+  }
+
+  return String(id);
+};
+
 function PelaporPage({ reportForm, setReportForm, submitReport, loading, reports, toWhatsAppLink, token }) {
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const visibleReports = Array.isArray(reports)
+    ? reports.filter((report) => report && typeof report === 'object').slice(0, 10)
+    : [];
 
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
@@ -162,26 +182,32 @@ function PelaporPage({ reportForm, setReportForm, submitReport, loading, reports
         <h2>Progres Laporan Terbaru</h2>
         <p className="muted">Pelapor dapat memantau status dan kontak WhatsApp admin.</p>
         <div className="list">
-          {reports.slice(0, 10).map((report) => (
-            <div className="list-item" key={report.id}>
-              <div>
-                <strong>#{String(report.id).slice(0, 8)}</strong>
-                <p>
-                  {report.category} - {report.subCategory}
-                </p>
-                <p>Status: {report.status}</p>
+          {visibleReports.map((report, index) => {
+            const reportId = formatReportId(report.id);
+            const shortReportId = reportId.slice(0, 8);
+            const reportStatus = report.status || '-';
+
+            return (
+              <div className="list-item" key={reportId !== '-' ? reportId : `report-${index}`}>
+                <div>
+                  <strong>#{shortReportId}</strong>
+                  <p>
+                    {report.category} - {report.subCategory}
+                  </p>
+                  <p>Status: {reportStatus}</p>
+                </div>
+                <div className="item-actions">
+                  <span className={`status ${String(reportStatus).toLowerCase()}`}>
+                    {reportStatus}
+                  </span>
+                  <a href={toWhatsAppLink(report.phoneNumber, reportId, reportStatus)} target="_blank" rel="noreferrer">
+                    Buka WhatsApp
+                  </a>
+                </div>
               </div>
-              <div className="item-actions">
-                <span className={`status ${String(report.status || '').toLowerCase()}`}>
-                  {report.status}
-                </span>
-                <a href={toWhatsAppLink(report.phoneNumber, report.id, report.status)} target="_blank" rel="noreferrer">
-                  Buka WhatsApp
-                </a>
-              </div>
-            </div>
-          ))}
-          {!reports.length ? <p className="muted">Belum ada laporan.</p> : null}
+            );
+          })}
+          {!visibleReports.length ? <p className="muted">Belum ada laporan.</p> : null}
         </div>
       </article>
     </section>
